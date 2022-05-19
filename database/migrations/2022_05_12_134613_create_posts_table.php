@@ -17,10 +17,10 @@ class CreatePostsTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->string('post_title',20);
-            $table->string('post_description', 50);
+            $table->string('post_description', 255);
             $table->integer('status')->length(1);
             $table->timestamps();
-            
+
         });
 
     }

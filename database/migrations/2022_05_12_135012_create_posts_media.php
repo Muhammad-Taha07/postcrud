@@ -13,11 +13,11 @@ class CreatePostsMedia extends Migration
      */
     public function up()
     {
-        Schema::create('posts_media', function (Blueprint $table) {
+        Schema::create('post_media', function (Blueprint $table) {
 
             $table->id();
             // $table->integer('posts_id')->unsigned()->index();;
-            $table->foreignId('posts_id')->constrained('posts')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('post_id')->constrained('posts')->onUpdate('cascade')->onDelete('cascade');
             $table->string('media_url', 80);
             $table->string('media_thumb_url',80);
             $table->integer('status')->length(1);

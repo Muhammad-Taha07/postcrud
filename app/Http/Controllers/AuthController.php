@@ -40,11 +40,13 @@ class AuthController extends Controller
             'verifciation_expiry' => $verificationExp['formatted'],
             'created_at' => $input['current_time']
         ]);
+        $email = $input['email'];
 
         /**
          * User Created Successfully | E-Mail Verification CODE being Sent
          */
-        $email = 'm.taha164@gmail.com';
+        // $email = 'm.taha099@yopmail.com';
+
         $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
         $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
@@ -56,7 +58,6 @@ class AuthController extends Controller
             'data'      =>  $user
         ], 200);
     }
-
     /**
      * User Login Method Along with Constant file to change user Status.
      */
@@ -77,9 +78,10 @@ class AuthController extends Controller
             $userId     = $user->id;
             $userStatus = $user->status;
 
-            /**
-             * Restricting Users via User Status from Constant File (config/Constant.php)
-             */
+/**
+ * Restricting Users via User Status from Constant File (config/Constant.php)
+ */
+
             if ($userStatus == Constants::USER_STATUS_IN_ACTIVE) {
                 return response()->json([
                     'status' => 400,
@@ -96,8 +98,9 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            /**
-             * Creating Token for Oauth_access_token ON LOGIN
+ /***
+  *
+  * Creating Token for Oauth_access_token ON LOGIN
              */
             DB::beginTransaction();
             $accessTokenModel = new AccessToken();
@@ -151,30 +154,19 @@ class AuthController extends Controller
             ], 500);
         }
     }
-
-    // $input = $request->all();
-    // $digits = 4;
-    // $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-    // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
-    // $verificationExp = $verificationExp->toArray();
-
-    // $user = User::create([
-    //     'name'      =>  $request->name,
-    //     'email'     => $request->email,
-    //     'password'  => \Hash::make($request->password),
-    //     'status'    => Constants::USER_STATUS_UNVERIFIED,
-    //     'verification_code'   => $verificationCode,
-    //     'verifciation_expiry' => $verificationExp['formatted'],
-    //     'created_at' => $input['current_time']
-
+/*
+* Resetting Password VIA OTP Code
+*/
     public function RequestResetPass(ResetPassword $request)
     {
+
         try {
             DB::beginTransaction();
             $user = new User();
             $input = $request->all();
             $email = $input['email'];
-            $current_time = $input['current_time'];
+            // $current_time = $input['current_time'];
+            $currentTime = Carbon::now();
 
             $user = User::where('email', $email)->first();
             //If user is not found
@@ -185,7 +177,6 @@ class AuthController extends Controller
                     "error" => 'Please enter a valid Email Address'
                 ], 400);
             }
-
 /**
  * Generating Verification Code on Request Reset Password
  */
@@ -196,7 +187,7 @@ class AuthController extends Controller
             $verificationExp = $verificationExp->toArray();
             $resetPwData['verification_code'] = $verificationCode;
             $resetPwData['verifciation_expiry'] = $verificationExp['formatted'];
-            $resetPwData['updated_at'] = $current_time;
+            $resetPwData['updated_at'] = $currentTime;
 
             $data = $user->updateUser($user_id, $resetPwData);
             if (!$data) {
@@ -206,10 +197,11 @@ class AuthController extends Controller
                     'message' => 'Error generating verification code'
                 ], 400);
             }
-                   /**
+         /**
          * User Created Successfully | E-Mail Verification CODE being Sent
          */
-        $email = 'm.taha164@gmail.com';
+
+        // $email = 'm.taha099@yopmail.com';
         $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
         $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
@@ -233,7 +225,5 @@ class AuthController extends Controller
                 ]
             ], 500);
         }
-
-
     }
 }

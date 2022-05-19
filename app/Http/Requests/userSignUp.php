@@ -41,11 +41,10 @@ class userSignUp extends FormRequest
     {
         return
         [
-            'email.required' => 'Required fields cannot be empty',
-            'email.email' => 'Please enter a valid enter',
-            'password.required' => 'Required fields cannot be empty',
+            '*.required' => 'Required fields cannot be left empty',
+            'email.email' => 'Please enter a valid email',
+            'email.unique' => ':attribute should be unique',
             'password.regex' => 'Password length must contain atleast 6 character and must include following: Uppercase, Lowercase, Special character & numbers',
-            'current_time.required' => 'Required fields cannot be left empty',
         ];
     }
 
@@ -53,14 +52,13 @@ class userSignUp extends FormRequest
     {
             return [
                 'email' => 'Email Address',
-                'platform'  => 'Social Platform'
             ];
     }
 
     public function failedValidation(Validator $validator)
     {
         $error = [
-            "status" =>400,
+            "status" => 400,
             "success" => false,
             "error" =>  $validator->errors()->first()
         ];

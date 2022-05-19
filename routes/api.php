@@ -20,18 +20,20 @@ use App\Http\Controllers\API\AuthController;
 // });
 //On-Boarding(Sign Up, Login, Change Password, Forget Password) API's
 
-//Viewing User via API
-Route::get('users/viewusers', 'AuthController@allUser');
+Route::prefix('users')->group(function () {
+    //Viewing User via API
+    Route::get('/viewusers', 'AuthController@allUser');
 
-//Sign Up (User Registration)
-Route::post('users/register', 'AuthController@register');
+    //Sign Up (User Registration)
+    Route::post('/register', 'AuthController@register');
 
-//Login User
-Route::post('users/login','AuthController@login');
+    //Login User
+    Route::post('/login','AuthController@login');
 
+    //Request Reset Password
+    Route::post('/send-code', 'AuthController@RequestResetPass');
+});
 
-//Request Reset Password
-Route::post('users/resetpass', 'AuthController@RequestResetPass');
 
 //View User
 // Route::middleware('auth:api')->prefix('users')->group(function(){

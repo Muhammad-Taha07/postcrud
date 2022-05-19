@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\userLogin;
 use App\Http\Requests\userSignUp;
+use App\Http\Requests\ResetPassword;
 use App\User;
 use App\AccessToken;
 use App\config\Constants;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+// use Mail;
 use Exception;
 
 class AuthController extends Controller
@@ -42,9 +44,9 @@ class AuthController extends Controller
         /**
          * User Created Successfully | E-Mail Verification CODE being Sent
          */
-
-        $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message){
-        $message->to('m.taha164@gmail.com')->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
+        $email = 'm.taha164@gmail.com';
+        $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
+        $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
 
         return response()->json([
@@ -148,5 +150,90 @@ class AuthController extends Controller
                 "message" => $exception
             ], 500);
         }
+    }
+
+    // $input = $request->all();
+    // $digits = 4;
+    // $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+    // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
+    // $verificationExp = $verificationExp->toArray();
+
+    // $user = User::create([
+    //     'name'      =>  $request->name,
+    //     'email'     => $request->email,
+    //     'password'  => \Hash::make($request->password),
+    //     'status'    => Constants::USER_STATUS_UNVERIFIED,
+    //     'verification_code'   => $verificationCode,
+    //     'verifciation_expiry' => $verificationExp['formatted'],
+    //     'created_at' => $input['current_time']
+
+    public function RequestResetPass(ResetPassword $request)
+    {
+        try {
+            DB::beginTransaction();
+            $user = new User();
+            $input = $request->all();
+            $email = $input['email'];
+            $current_time = $input['current_time'];
+
+            $user = User::where('email', $email)->first();
+            //If user is not found
+            if (!$user) {
+                return response()->json([
+                    "success" => false,
+                    "status" => 400,
+                    "error" => 'Please enter a valid Email Address'
+                ], 400);
+            }
+
+/**
+ * Generating Verification Code on Request Reset Password
+ */
+            $user_id = $user->id;
+            $digits = 4;
+            $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+            $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
+            $verificationExp = $verificationExp->toArray();
+            $resetPwData['verification_code'] = $verificationCode;
+            $resetPwData['verifciation_expiry'] = $verificationExp['formatted'];
+            $resetPwData['updated_at'] = $current_time;
+
+            $data = $user->updateUser($user_id, $resetPwData);
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 400,
+                    'message' => 'Error generating verification code'
+                ], 400);
+            }
+                   /**
+         * User Created Successfully | E-Mail Verification CODE being Sent
+         */
+        $email = 'm.taha164@gmail.com';
+        $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
+        $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
+        });
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 200,
+                'success' => true,
+                'message' => 'Verification Code Generated Successfully',
+                'data' => $data
+            ], 200);
+
+        }
+        catch (Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'status' => 500,
+                'error' => [
+                    'message' => $exception->getMessage()
+                ]
+            ], 500);
+        }
+
+
     }
 }

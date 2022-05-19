@@ -30,6 +30,9 @@ Route::post('users/register', 'AuthController@register');
 Route::post('users/login','AuthController@login');
 
 
+//Request Reset Password
+Route::post('users/resetpass', 'AuthController@RequestResetPass');
+
 //View User
 // Route::middleware('auth:api')->prefix('users')->group(function(){
 //     Route::get('getUser','AuthController@userInfo');

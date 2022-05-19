@@ -39,4 +39,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    //Needs to be Cleared
+    // public function updateUserStatus($userId, $input)
+    // {
+    // return $updateUser = User::where('id', $userId)->update($input);
+    // }
+
+    public function updateUser($id, $data)
+    {
+        $user =  User::find($id);
+        $user->update($data);
+        $user->save();
+        return $user ? $user : array();
+    }
 }

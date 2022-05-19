@@ -53,4 +53,10 @@ class User extends Authenticatable
         $user->save();
         return $user ? $user : array();
     }
+
+    public function createUser($data)
+    {
+        $user = User::create($data);
+        return $user ? $user : array();
+    }
 }

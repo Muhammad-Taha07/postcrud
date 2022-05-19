@@ -25,11 +25,15 @@ class AuthController extends Controller
      */
     public function register(userSignUp $request)
     {
+        date_default_timezone_set("Asia/Karachi");
+        $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
+
         $input = $request->all();
         $digits = 4;
         $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-        $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
-        $verificationExp = $verificationExp->toArray();
+        $verificationExp = $mytime;
+        // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
+        // $verificationExp = $verificationExp->toArray();
 
         $user = User::create([
             'name'      =>  $request->name,
@@ -37,8 +41,9 @@ class AuthController extends Controller
             'password'  => \Hash::make($request->password),
             'status'    => Constants::USER_STATUS_UNVERIFIED,
             'verification_code'   => $verificationCode,
-            'verifciation_expiry' => $verificationExp['formatted'],
-            'created_at' => $input['current_time']
+            'verifciation_expiry' => $verificationExp,
+            // 'verifciation_expiry' => $verificationExp['formatted'],
+            // 'created_at' => $input['current_time']
         ]);
         $email = $input['email'];
 
@@ -159,7 +164,7 @@ class AuthController extends Controller
 */
     public function RequestResetPass(ResetPassword $request)
     {
-
+        date_default_timezone_set("Asia/Karachi");
         try {
             DB::beginTransaction();
             $user = new User();
@@ -183,13 +188,15 @@ class AuthController extends Controller
             $user_id = $user->id;
             $digits = 4;
             $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-            $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
-            $verificationExp = $verificationExp->toArray();
+            // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
+            $verificationExp = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
+            // $verificationExp = $verificationExp->toArray();
             $resetPwData['verification_code'] = $verificationCode;
-            $resetPwData['verifciation_expiry'] = $verificationExp['formatted'];
-            $resetPwData['updated_at'] = $currentTime;
+            $resetPwData['verifciation_expiry'] = $verificationExp;
+            // $resetPwData['updated_at'] = $currentTime;
 
             $data = $user->updateUser($user_id, $resetPwData);
+
             if (!$data) {
                 return response()->json([
                     'success' => false,

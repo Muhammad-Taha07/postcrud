@@ -27,8 +27,9 @@ class AuthController extends Controller
     public function register(userSignUp $request)
     {
         date_default_timezone_set("Asia/Karachi");
-        $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
         $input = $request->all();
+        $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
+        $email = $input['email'];
         $digits = 4;
         $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
         $verificationExp = $mytime;
@@ -39,12 +40,12 @@ class AuthController extends Controller
             'password'            => \Hash::make($request->password),
             'status'              => Constants::USER_STATUS_UNVERIFIED,
             'verification_code'   => $verificationCode,
-            'verifciation_expiry' => $verificationExp,
+            'verification_expiry' => $verificationExp,
         ]);
         /**
          * User Created Successfully | E-Mail Verification CODE being Sent
          */
-        $email = $input['email'];
+
         $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
             $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
@@ -179,7 +180,7 @@ class AuthController extends Controller
             $verificationExp = $currentTime->addDays(7)->format('Y-m-d H:i:s');
             // $verificationExp = $verificationExp->toArray();
             $resetPwData['verification_code'] = $verificationCode;
-            $resetPwData['verifciation_expiry'] = $verificationExp;
+            $resetPwData['verification_expiry'] = $verificationExp;
 
             $data = $user->updateUser($user_id, $resetPwData);
 
@@ -222,6 +223,7 @@ class AuthController extends Controller
     {
         try {
             DB::beginTransaction();
+            $user = new User();
             $email = $request->input('email');
             $verifyCode = $request->input('verification_code');
             $current_time = Carbon::now()->format('Y-m-d H:i:s');
@@ -235,8 +237,6 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            // $user_id = $user->id;
-            // if($user->)
 
             $user_code = $user->verification_code;
 
@@ -247,8 +247,18 @@ class AuthController extends Controller
                     "message" => "Incorrect OTP"
                 ], 400);
             }
+            $user_id = $user->id;
+            if($user->verification_expiry < $current_time)
+            {
+                return response()->json([
+                    "success" => false,
+                    "status" => 400,
+                    "message" => "Verification Code has expired | Request a new One"
+                ], 400);
+            }
 
-            else{
+            else
+            {
             $user->status = Constants::USER_STATUS_ACTIVE;
             $user->save();
             DB::commit();
@@ -260,7 +270,9 @@ class AuthController extends Controller
             ], 200);
             }
 
-        } catch (Exception $e) {
+        }
+        catch (Exception $e)
+        {
             return response()->json([
                 "success" => false,
                 "status" => 500,

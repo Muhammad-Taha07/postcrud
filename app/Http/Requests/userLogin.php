@@ -42,11 +42,11 @@ class userLogin extends FormRequest
     {
         return [
             '*.required'    => 'Required fields cannot be left empty',
-            'email.email'   => 'Please enter a valid email',
+            'email.email'   => 'Please enter a valid :attribute',
         ];
     }
 
-        /**
+    /**
      * Get the custom attributes for validator errors
      * @return array
      */

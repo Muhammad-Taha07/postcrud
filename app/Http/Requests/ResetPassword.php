@@ -28,7 +28,6 @@ class ResetPassword extends FormRequest
         return
         [
             'email' => 'required|email',
-            // 'current_time'  =>  'required|date_format:Y-m-d H:i:s'
         ];
     }
 

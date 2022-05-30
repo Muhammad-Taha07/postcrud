@@ -32,6 +32,11 @@ Route::prefix('users')->group(function () {
 
     //Request Reset Password
     Route::post('/send-code', 'AuthController@RequestResetPass');
+
+    Route::post('/user-verification', 'AuthController@userAccountVerification');
+
+    //Deleting User from database using Delete API
+    Route::delete('/user-delete/{id}', 'AuthController@deleteUser');
 });
 
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\userLogin;
 use App\Http\Requests\userSignUp;
 use App\Http\Requests\ResetPassword;
+use App\Http\Requests\UserVerification;
 use App\User;
 use App\AccessToken;
 use App\config\Constants;
@@ -15,8 +16,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-// use Mail;
 use Exception;
+use PHPUnit\TextUI\XmlConfiguration\Constant;
 
 class AuthController extends Controller
 {
@@ -27,35 +28,26 @@ class AuthController extends Controller
     {
         date_default_timezone_set("Asia/Karachi");
         $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
-
         $input = $request->all();
         $digits = 4;
         $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
         $verificationExp = $mytime;
-        // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
-        // $verificationExp = $verificationExp->toArray();
 
         $user = User::create([
-            'name'      =>  $request->name,
-            'email'     => $request->email,
-            'password'  => \Hash::make($request->password),
-            'status'    => Constants::USER_STATUS_UNVERIFIED,
+            'name'                => $request->name,
+            'email'               => $request->email,
+            'password'            => \Hash::make($request->password),
+            'status'              => Constants::USER_STATUS_UNVERIFIED,
             'verification_code'   => $verificationCode,
             'verifciation_expiry' => $verificationExp,
-            // 'verifciation_expiry' => $verificationExp['formatted'],
-            // 'created_at' => $input['current_time']
         ]);
-        $email = $input['email'];
-
         /**
          * User Created Successfully | E-Mail Verification CODE being Sent
          */
-        // $email = 'm.taha099@yopmail.com';
-
-        $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
-        $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
+        $email = $input['email'];
+        $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
+            $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
-
         return response()->json([
             'status'    =>  200,
             'success'   =>  true,
@@ -63,6 +55,7 @@ class AuthController extends Controller
             'data'      =>  $user
         ], 200);
     }
+
     /**
      * User Login Method Along with Constant file to change user Status.
      */
@@ -74,24 +67,21 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 400,
                     'success' => false,
-                    'error' => 'Try Again Email/Password is Incorrect'
+                    'message' => 'Try Again Email Address/Password is Incorrect'
                 ], 400);
             }
 
             $user       = Auth::user();
-            $userModel  = new User();
             $userId     = $user->id;
             $userStatus = $user->status;
-
-/**
- * Restricting Users via User Status from Constant File (config/Constant.php)
- */
-
+            /**
+             * Restricting Users via User Status from Constant File (config/Constant.php)
+             */
             if ($userStatus == Constants::USER_STATUS_IN_ACTIVE) {
                 return response()->json([
                     'status' => 400,
                     'success' => false,
-                    'error' => 'User is Inactive'
+                    'message' => 'User is Inactive'
                 ], 400);
             }
 
@@ -99,20 +89,17 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 400,
                     'success' => false,
-                    'error' => 'User is Unverified'
+                    'message' => 'User is Unverified'
                 ], 400);
             }
-
- /***
-  *
-  * Creating Token for Oauth_access_token ON LOGIN
+            /**
+             * Creating Token for Oauth_access_token ON LOGIN
              */
             DB::beginTransaction();
             $accessTokenModel = new AccessToken();
             $destroyToken = $accessTokenModel->sessionDestroyed($userId);
             $token = $user->createToken('postcrud')->accessToken;
             DB::commit();
-
             /**
              * User LOGIN Success Response
              */
@@ -128,28 +115,30 @@ class AuthController extends Controller
                 'message' => 'logged in successfull',
                 'data' => $success
             ], 200);
-        } catch (Exception $exception) {
+
+        }
+        catch (Exception $exception) {
             return response()->json([
                 'success' => false,
                 'status' => 500,
-                'error' => ['message' => $exception->getMessage()]
+                'message' => 'Sign in Failed'
+                // 'error' => ['message' => $exception->getMessage()]
             ], 500);
         }
     }
-
     /**
-     * User : Viewing All user
+     * User : Fetching User List from database/Viewing User list.
      */
     public function allUser()
     {
         try {
-            $user1 = User::all();
+            $user = User::all();
 
             return response()->json([
                 "success" => true,
                 "status" => 200,
                 "message" => "User fetched successfully",
-                "data" => $user1
+                "data" => $user
             ], 200);
         } catch (Exception $exception) {
             return response()->json([
@@ -159,41 +148,38 @@ class AuthController extends Controller
             ], 500);
         }
     }
-/*
-* Resetting Password VIA OTP Code
-*/
+/**
+ * Resetting Password via Verification Code
+ **/
     public function RequestResetPass(ResetPassword $request)
     {
         date_default_timezone_set("Asia/Karachi");
-        try {
+        try
+        {
             DB::beginTransaction();
             $user = new User();
             $input = $request->all();
             $email = $input['email'];
             // $current_time = $input['current_time'];
             $currentTime = Carbon::now();
-
             $user = User::where('email', $email)->first();
-            //If user is not found
+
+            //User Not Found
             if (!$user) {
                 return response()->json([
-                    "success" => false,
-                    "status" => 400,
-                    "error" => 'Please enter a valid Email Address'
+                    'success' => false,
+                    'status' => 400,
+                    'message' => 'Please enter a valid Email Address'
                 ], 400);
             }
-/**
- * Generating Verification Code on Request Reset Password
- */
+
             $user_id = $user->id;
             $digits = 4;
             $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-            // $verificationExp = Carbon::parse($input['current_time'] == now())->addDays(7);
-            $verificationExp = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
+            $verificationExp = $currentTime->addDays(7)->format('Y-m-d H:i:s');
             // $verificationExp = $verificationExp->toArray();
             $resetPwData['verification_code'] = $verificationCode;
             $resetPwData['verifciation_expiry'] = $verificationExp;
-            // $resetPwData['updated_at'] = $currentTime;
 
             $data = $user->updateUser($user_id, $resetPwData);
 
@@ -204,32 +190,124 @@ class AuthController extends Controller
                     'message' => 'Error generating verification code'
                 ], 400);
             }
-         /**
-         * User Created Successfully | E-Mail Verification CODE being Sent
-         */
-
-        // $email = 'm.taha099@yopmail.com';
-        $check = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use($email){
-        $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
-        });
-
-            DB::commit();
-
+            //EMAIL
+            $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
+                $message->to($email)->subject('Account Verification Code - Password reset ')->from(env('MAIL_FROM'));
+             });
+             DB::commit();
             return response()->json([
-                'status' => 200,
                 'success' => true,
+                'status' => 200,
                 'message' => 'Verification Code Generated Successfully',
                 'data' => $data
             ], 200);
-
         }
-        catch (Exception $exception) {
+
+        catch (Exception $exception)
+        {
             return response()->json([
                 'success' => false,
                 'status' => 500,
-                'error' => [
-                    'message' => $exception->getMessage()
-                ]
+                'message' => 'Verification Code Fail to generate.'
+                // 'error' => [
+                //     'message' => $exception->getMessage()
+                // ]
+            ], 500);
+        }
+    }
+    /**
+     * User Account Verification STATUS CHANGE METHOD
+     */
+    public function userAccountVerification(UserVerification $request)
+    {
+        try {
+            DB::beginTransaction();
+            $email = $request->input('email');
+            $verifyCode = $request->input('verification_code');
+            $current_time = Carbon::now()->format('Y-m-d H:i:s');
+
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                return response()->json([
+                    "success" => false,
+                    "status" => 400,
+                    "error" => 'Email does not exist'
+                ], 400);
+            }
+
+            // $user_id = $user->id;
+            // if($user->)
+
+            $user_code = $user->verification_code;
+
+            if ($verifyCode != $user_code) {
+                return response()->json([
+                    "success" => false,
+                    "status" => 400,
+                    "message" => "Incorrect OTP"
+                ], 400);
+            }
+
+            else{
+            $user->status = Constants::USER_STATUS_ACTIVE;
+            $user->save();
+            DB::commit();
+            return response()->json([
+                "success" => true,
+                "status" => 200,
+                "message" => "User Status has been changed Successfully.",
+                "data" => $user
+            ], 200);
+            }
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "status" => 500,
+                "message" => "Internal Server Error"
+            ], 500);
+        }
+    }
+    public function deleteUser($id)
+    {
+        try
+        {
+            $user = User::find($id);
+            $user->delete($id);
+            $user_id = $user->id;
+            if(!$user_id)
+            {
+                return response()->json([
+                    "success" => false,
+                    "status" => 404,
+                    "message" => "User not found"
+                ], 404);
+            }
+            if($id == null)
+            {
+                return response()->json([
+                    "success" => false,
+                    "status" => 404,
+                    "message" => "User id is null"
+                ], 404);
+            }
+            else
+
+            {
+            return response()->json([
+                "success" => true,
+                "status" => 200,
+                "message" => "User has been deleted Successfully"
+            ], 200);
+            }
+        }
+
+        catch(Exception $exception)
+        {
+            return response()->json([
+                "success" => false,
+                "status" => 500,
+                "message" => "Internal Server Error"
             ], 500);
         }
     }

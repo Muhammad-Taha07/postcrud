@@ -6,7 +6,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
-
+use App\Http\Controllers\AuthController;
+use DB;
 
 class User extends Authenticatable
 {
@@ -40,18 +41,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    //Needs to be Cleared
-    // public function updateUserStatus($userId, $input)
-    // {
-    // return $updateUser = User::where('id', $userId)->update($input);
-    // }
+    // Needs to be Cleared
+    public function updateUserStatus($userId, $input)
+    {
+    return $updateUser = User::where('id', $userId)->update($input);
+    }
 
     public function updateUser($id, $data)
     {
-        $user =  User::find($id);
-        $user->update($data);
-        $user->save();
-        return $user ? $user : array();
+        $saveUser =  User::find($id);
+        $saveUser->update($data);
+        $saveUser->save();
+        return $saveUser ? $saveUser : array();
     }
 
     public function createUser($data)

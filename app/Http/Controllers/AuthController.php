@@ -93,17 +93,19 @@ class AuthController extends Controller
                     'message' => 'User is Unverified'
                 ], 400);
             }
-            /**
-             * Creating Token for Oauth_access_token ON LOGIN
-             */
+/**
+ * Creating Token for Oauth_access_token ON LOGIN
+*/
+
             DB::beginTransaction();
             $accessTokenModel = new AccessToken();
             $destroyToken = $accessTokenModel->sessionDestroyed($userId);
-            $token = $user->createToken('postcrud')->accessToken;
+            $token = $user->createToken('postscrud')->accessToken;
             DB::commit();
-            /**
-             * User LOGIN Success Response
-             */
+
+/**
+ * User LOGIN Success Response
+ */
             $success = array(
                 'user_id'  => $userId,
                 'username' => $user->name,
@@ -118,7 +120,8 @@ class AuthController extends Controller
             ], 200);
 
         }
-        catch (Exception $exception) {
+        catch (Exception $exception)
+        {
             return response()->json([
                 'success' => false,
                 'status' => 500,

@@ -2,7 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +40,18 @@ Route::prefix('users')->group(function () {
     Route::delete('/user-delete/{id}', 'AuthController@deleteUser');
 });
 
+Route::middleware('auth:api')->prefix('posts')->group(function()
+{
+    Route::get('', [PostController::class, 'fetchPosts']);
 
-//View User
-// Route::middleware('auth:api')->prefix('users')->group(function(){
-//     Route::get('getUser','AuthController@userInfo');
-// });
+    Route::post('/createpost', [PostController::class, 'createPost']);
+});
+
+
+Route::get('user-not-loggedin', function(){
+    return response()->json([
+        "status" => 401,
+        "success" => false,
+        "message" => "You are not logged in"
+    ], 401);
+})->name("user-not-loggedin");

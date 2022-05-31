@@ -6,14 +6,14 @@ use App\Http\Requests\userLogin;
 use App\Http\Requests\userSignUp;
 use App\Http\Requests\ResetPassword;
 use App\Http\Requests\UserVerification;
+use Illuminate\Http\Request;
 use App\User;
 use App\AccessToken;
 use App\config\Constants;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Exception;
@@ -64,20 +64,22 @@ class AuthController extends Controller
     {
         try {
             $input = $request->all();
-            if (!Auth::attempt(['email' => $input['email'], 'password' => $input['password']])) {
+            if (!Auth::attempt(['email' => $input['email'], 'password' => $input['password']]))
+            {
                 return response()->json([
                     'status' => 400,
                     'success' => false,
                     'message' => 'Try Again Email Address/Password is Incorrect'
                 ], 400);
             }
-
             $user       = Auth::user();
             $userId     = $user->id;
             $userStatus = $user->status;
-            /**
-             * Restricting Users via User Status from Constant File (config/Constant.php)
-             */
+
+    /**
+     * Restricting Users via User Status from Constant File (config/Constant.php)
+     */
+
             if ($userStatus == Constants::USER_STATUS_IN_ACTIVE) {
                 return response()->json([
                     'status' => 400,
@@ -93,10 +95,10 @@ class AuthController extends Controller
                     'message' => 'User is Unverified'
                 ], 400);
             }
+
 /**
  * Creating Token for Oauth_access_token ON LOGIN
 */
-
             DB::beginTransaction();
             $accessTokenModel = new AccessToken();
             $destroyToken = $accessTokenModel->sessionDestroyed($userId);
@@ -110,7 +112,8 @@ class AuthController extends Controller
                 'user_id'  => $userId,
                 'username' => $user->name,
                 'email'  => $user->email,
-                'status' =>  $userStatus
+                'status' =>  $userStatus,
+                'token'  => "Bearer ".$token
             );
             return response()->json([
                 'success' => true,
@@ -118,8 +121,8 @@ class AuthController extends Controller
                 'message' => 'logged in successfull',
                 'data' => $success
             ], 200);
-
         }
+
         catch (Exception $exception)
         {
             return response()->json([
@@ -130,21 +133,23 @@ class AuthController extends Controller
             ], 500);
         }
     }
-    /**
-     * User : Fetching User List from database/Viewing User list.
-     */
+/**
+ * User : Fetching User List from database/Viewing User list.
+ */
     public function allUser()
     {
         try {
-            $user = User::all();
+            $users = User::all();
 
             return response()->json([
                 "success" => true,
                 "status" => 200,
-                "message" => "User fetched successfully",
-                "data" => $user
+                "message" => "Users fetched successfully",
+                "data" => $users
             ], 200);
-        } catch (Exception $exception) {
+
+        }
+        catch (Exception $exception) {
             return response()->json([
                 "success" => false,
                 "status" => 500,
@@ -158,9 +163,10 @@ class AuthController extends Controller
     public function RequestResetPass(ResetPassword $request)
     {
         date_default_timezone_set("Asia/Karachi");
+        DB::beginTransaction();
+
         try
         {
-            DB::beginTransaction();
             $user = new User();
             $input = $request->all();
             $email = $input['email'];
@@ -198,7 +204,9 @@ class AuthController extends Controller
             $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
                 $message->to($email)->subject('Account Verification Code - Password reset ')->from(env('MAIL_FROM'));
              });
-             DB::commit();
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'status' => 200,
@@ -209,6 +217,7 @@ class AuthController extends Controller
 
         catch (Exception $exception)
         {
+            DB::rollback();
             return response()->json([
                 'success' => false,
                 'status' => 500,
@@ -224,8 +233,9 @@ class AuthController extends Controller
      */
     public function userAccountVerification(UserVerification $request)
     {
+        DB::beginTransaction();
+
         try {
-            DB::beginTransaction();
             $user = new User();
             $email = $request->input('email');
             $verifyCode = $request->input('verification_code');
@@ -239,7 +249,6 @@ class AuthController extends Controller
                     "error" => 'Email does not exist'
                 ], 400);
             }
-
 
             $user_code = $user->verification_code;
 
@@ -276,6 +285,7 @@ class AuthController extends Controller
         }
         catch (Exception $e)
         {
+            DB::rollback();
             return response()->json([
                 "success" => false,
                 "status" => 500,
@@ -288,7 +298,7 @@ class AuthController extends Controller
         try
         {
             $user = User::find($id);
-            $user->delete($id);
+            $user->delete();
             $user_id = $user->id;
             if(!$user_id)
             {
@@ -298,12 +308,13 @@ class AuthController extends Controller
                     "message" => "User not found"
                 ], 404);
             }
+
             if($id == null)
             {
                 return response()->json([
                     "success" => false,
                     "status" => 404,
-                    "message" => "User id is null"
+                    "message" => "User id cannot be null"
                 ], 404);
             }
             else

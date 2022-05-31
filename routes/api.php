@@ -47,7 +47,6 @@ Route::middleware('auth:api')->prefix('posts')->group(function()
     Route::post('/createpost', [PostController::class, 'createPost']);
 });
 
-
 Route::get('user-not-loggedin', function(){
     return response()->json([
         "status" => 401,

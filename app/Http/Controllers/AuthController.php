@@ -50,8 +50,8 @@ class AuthController extends Controller
             $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
         return response()->json([
-            'status'    =>  200,
             'success'   =>  true,
+            'status'    =>  200,
             'message'   =>  'User created Successfully',
             'data'      =>  $user
         ], 200);
@@ -67,8 +67,8 @@ class AuthController extends Controller
             if (!Auth::attempt(['email' => $input['email'], 'password' => $input['password']]))
             {
                 return response()->json([
-                    'status' => 400,
                     'success' => false,
+                    'status' => 400,
                     'message' => 'Try Again Email Address/Password is Incorrect'
                 ], 400);
             }
@@ -82,8 +82,8 @@ class AuthController extends Controller
 
             if ($userStatus == Constants::USER_STATUS_IN_ACTIVE) {
                 return response()->json([
-                    'status' => 400,
                     'success' => false,
+                    'status' => 400,
                     'message' => 'User is Inactive'
                 ], 400);
             }

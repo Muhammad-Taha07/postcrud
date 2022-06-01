@@ -18,13 +18,12 @@ class PostController extends Controller
     {
         try
         {
-            $post = Post::all();
-
+            $posts = Post::all();
             return response()->json([
                 "success" => true,
                 "status"  => 200,
                 "message" => "Posts have been fetched",
-                "data"    => $post
+                "data"    => $posts
             ], 200);
         }
 
@@ -40,15 +39,8 @@ class PostController extends Controller
     public function createPost(Request $req)
     {
         $user = Auth::user();
-        // dd($user);
         try
         {
-            /* $user->posts()->create([
-                'post_title' => $req->post_title,
-                'post_description' => $req->post_description,
-                'post_status' => Constants::POST_TYPE_ACTIVE,
-            ]); */
-
         $posts = Post::create([
             'title' => $req->post_title,
             'user_id' => $user->id,

@@ -21,12 +21,15 @@ use PHPUnit\TextUI\XmlConfiguration\Constant;
 
 class AuthController extends Controller
 {
-    /**
-     * User : Registration with Validation Code.
-     */
+/**
+ * User : Registration with Validation Code.
+ */
     public function register(userSignUp $request)
     {
+        DB::beginTransaction();
         date_default_timezone_set("Asia/Karachi");
+        try
+        {
         $input = $request->all();
         $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
         $email = $input['email'];
@@ -42,10 +45,11 @@ class AuthController extends Controller
             'verification_code'   => $verificationCode,
             'verification_expiry' => $verificationExp,
         ]);
-        /**
-         * User Created Successfully | E-Mail Verification CODE being Sent
-         */
+/**
+ * User Created Successfully | E-Mail Verification CODE being Sent
+ */
 
+        DB::commit();
         $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
             $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
@@ -55,13 +59,24 @@ class AuthController extends Controller
             'message'   =>  'User created Successfully',
             'data'      =>  $user
         ], 200);
-    }
+        }
 
-    /**
-     * User Login Method Along with Constant file to change user Status.
-     */
+        catch(Exception $exception)
+        {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'status'  => 500,
+                'message' => 'Internal Server Error'
+            ], 500);
+        }
+    }
+/**
+ * User Login Method Along with Constant file to change user Status.
+ */
     public function login(userLogin $request)
     {
+        DB::beginTransaction();
         try {
             $input = $request->all();
             if (!Auth::attempt(['email' => $input['email'], 'password' => $input['password']]))
@@ -75,11 +90,9 @@ class AuthController extends Controller
             $user       = Auth::user();
             $userId     = $user->id;
             $userStatus = $user->status;
-
-    /**
-     * Restricting Users via User Status from Constant File (config/Constant.php)
-     */
-
+/**
+ * Restricting Users via User Status from Constant File (config/Constant.php)
+ */
             if ($userStatus == Constants::USER_STATUS_IN_ACTIVE) {
                 return response()->json([
                     'success' => false,
@@ -95,16 +108,12 @@ class AuthController extends Controller
                     'message' => 'User is Unverified'
                 ], 400);
             }
-
 /**
  * Creating Token for Oauth_access_token ON LOGIN
 */
-            DB::beginTransaction();
             $accessTokenModel = new AccessToken();
             $destroyToken = $accessTokenModel->sessionDestroyed($userId);
             $token = $user->createToken('postscrud')->accessToken;
-            DB::commit();
-
 /**
  * User LOGIN Success Response
  */
@@ -115,6 +124,8 @@ class AuthController extends Controller
                 'status' =>  $userStatus,
                 'token'  => "Bearer ".$token
             );
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'status' => 200,
@@ -125,11 +136,11 @@ class AuthController extends Controller
 
         catch (Exception $exception)
         {
+            DB::rollback();
             return response()->json([
                 'success' => false,
                 'status' => 500,
                 'message' => 'Sign in Failed'
-                // 'error' => ['message' => $exception->getMessage()]
             ], 500);
         }
     }
@@ -162,19 +173,17 @@ class AuthController extends Controller
  **/
     public function RequestResetPass(ResetPassword $request)
     {
-        date_default_timezone_set("Asia/Karachi");
         DB::beginTransaction();
-
+        date_default_timezone_set("Asia/Karachi");
         try
         {
             $user = new User();
             $input = $request->all();
             $email = $input['email'];
-            // $current_time = $input['current_time'];
             $currentTime = Carbon::now();
             $user = User::where('email', $email)->first();
 
-            //User Not Found
+            //If User is not found
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -185,14 +194,13 @@ class AuthController extends Controller
 
             $user_id = $user->id;
             $digits = 4;
+
             $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
             $verificationExp = $currentTime->addDays(7)->format('Y-m-d H:i:s');
-            // $verificationExp = $verificationExp->toArray();
             $resetPwData['verification_code'] = $verificationCode;
             $resetPwData['verification_expiry'] = $verificationExp;
 
             $data = $user->updateUser($user_id, $resetPwData);
-
             if (!$data) {
                 return response()->json([
                     'success' => false,
@@ -200,10 +208,12 @@ class AuthController extends Controller
                     'message' => 'Error generating verification code'
                 ], 400);
             }
-            //EMAIL
-            $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
-                $message->to($email)->subject('Account Verification Code - Password reset ')->from(env('MAIL_FROM'));
-             });
+/**
+ * Mailing | Generating Verification Code via E-mail
+ **/
+        Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email){
+        $message->to($email)->subject('Account Verification Code - Password reset ')->from(env('MAIL_FROM'));
+        });
 
             DB::commit();
 
@@ -222,19 +232,15 @@ class AuthController extends Controller
                 'success' => false,
                 'status' => 500,
                 'message' => 'Verification Code Fail to generate.'
-                // 'error' => [
-                //     'message' => $exception->getMessage()
-                // ]
             ], 500);
         }
     }
-    /**
-     * User Account Verification STATUS CHANGE METHOD
-     */
+/**
+ * User Account Verification STATUS CHANGE METHOD
+ */
     public function userAccountVerification(UserVerification $request)
     {
         DB::beginTransaction();
-
         try {
             $user = new User();
             $email = $request->input('email');
@@ -251,7 +257,6 @@ class AuthController extends Controller
             }
 
             $user_code = $user->verification_code;
-
             if ($verifyCode != $user_code) {
                 return response()->json([
                     "success" => false,
@@ -259,6 +264,7 @@ class AuthController extends Controller
                     "message" => "Incorrect OTP"
                 ], 400);
             }
+
             $user_id = $user->id;
             if($user->verification_expiry < $current_time)
             {
@@ -273,7 +279,9 @@ class AuthController extends Controller
             {
             $user->status = Constants::USER_STATUS_ACTIVE;
             $user->save();
+
             DB::commit();
+
             return response()->json([
                 "success" => true,
                 "status" => 200,
@@ -318,7 +326,6 @@ class AuthController extends Controller
                 ], 404);
             }
             else
-
             {
             return response()->json([
                 "success" => true,
@@ -327,13 +334,13 @@ class AuthController extends Controller
             ], 200);
             }
         }
-
         catch(Exception $exception)
         {
             return response()->json([
                 "success" => false,
                 "status" => 500,
-                "message" => "Internal Server Error"
+                // "message" => "Internal Server Error"
+                'message' => $exception
             ], 500);
         }
     }

@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -23,34 +22,34 @@ use App\Http\Controllers\PostController;
 
 Route::prefix('users')->group(function () {
     //Viewing User via API
-    Route::get('/viewusers', 'AuthController@allUser');
+    Route::get('/viewusers', [AuthController::class, 'allUser']);
 
     //Sign Up (User Registration)
-    Route::post('/register', 'AuthController@register');
+    Route::post('/register', [AuthController::class,'register']);
 
     //Login User
-    Route::post('/login','AuthController@login');
+    Route::post('/login',[AuthController::class,'login']);
 
-    //Request Reset Password
-    Route::post('/send-code', 'AuthController@RequestResetPass');
+    //Request Reset Password API
+    Route::post('/send-code',[AuthController::class,'RequestResetPass']);
 
-    Route::post('/user-verification', 'AuthController@userAccountVerification');
+    //User Verification API
+    Route::post('/user-verification',[AuthController::class,'userAccountVerification']);
 
     //Deleting User from database using Delete API
-    Route::delete('/user-delete/{id}', 'AuthController@deleteUser');
+    Route::delete('/user-delete/{id}', [AuthController::class,'deleteUser']);
 });
 
 Route::middleware('auth:api')->prefix('posts')->group(function()
 {
-    Route::get('', [PostController::class, 'fetchPosts']);
-
+    Route::get('/getposts', [PostController::class,'fetchPosts']);
     Route::post('/createpost', [PostController::class, 'createPost']);
 });
 
-Route::get('user-not-loggedin', function(){
-    return response()->json([
-        "status" => 401,
-        "success" => false,
-        "message" => "You are not logged in"
-    ], 401);
-})->name("user-not-loggedin");
+    Route::get('user-not-loggedin', function(){
+        return response()->json([
+            "success" => false,
+            "status" => 401,
+            "message" => "You are not logged in"
+        ], 401);
+    })->name("user-not-loggedin");

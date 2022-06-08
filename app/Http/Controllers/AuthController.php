@@ -26,8 +26,8 @@ class AuthController extends Controller
  */
     public function register(userSignUp $request)
     {
-        DB::beginTransaction();
         date_default_timezone_set("Asia/Karachi");
+        DB::beginTransaction();
         try
         {
         $input = $request->all();
@@ -48,7 +48,6 @@ class AuthController extends Controller
 /**
  * User Created Successfully | E-Mail Verification CODE being Sent
  */
-
         DB::commit();
         $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
             $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
@@ -301,6 +300,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
     public function deleteUser($id)
     {
         try

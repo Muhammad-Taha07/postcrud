@@ -21,22 +21,12 @@ use App\Http\Controllers\PostController;
 //On-Boarding(Sign Up, Login, Change Password, Forget Password) API's
 
 Route::prefix('users')->group(function () {
-    //Viewing User via API
+
     Route::get('/viewusers', [AuthController::class, 'allUser']);
-
-    //Sign Up (User Registration)
     Route::post('/register', [AuthController::class,'register']);
-
-    //Login User
     Route::post('/login',[AuthController::class,'login']);
-
-    //Request Reset Password API
     Route::post('/send-code',[AuthController::class,'RequestResetPass']);
-
-    //User Verification API
     Route::post('/user-verification',[AuthController::class,'userAccountVerification']);
-
-    //Deleting User from database using Delete API
     Route::delete('/user-delete/{id}', [AuthController::class,'deleteUser']);
 });
 
@@ -44,6 +34,8 @@ Route::middleware('auth:api')->prefix('posts')->group(function()
 {
     Route::get('/getposts', [PostController::class,'fetchPosts']);
     Route::post('/createpost', [PostController::class, 'createPost']);
+    Route::get('/fetchjoin',[PostController::class,'useJoins']);
+    Route::get('/fetching',[PostController::class,'RealtionshipFetch']);
 });
 
     Route::get('user-not-loggedin', function(){

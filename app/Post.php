@@ -8,4 +8,11 @@ class Post extends Model
 {
     protected $table = "posts";
     protected $fillable = ['user_id', 'title', 'description', 'status'];
+
+    public function userFetched()
+    {
+        return $this->belongsTo('App\User');
+    }
+
+
 }

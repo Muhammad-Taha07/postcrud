@@ -60,4 +60,10 @@ class User extends Authenticatable
         $user = User::create($data);
         return $user ? $user : array();
     }
+
+    public function postfetched()
+    {
+        return $this->hasMany('App\Post');
+    }
+
 }

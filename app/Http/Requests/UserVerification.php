@@ -27,7 +27,7 @@ class UserVerification extends FormRequest
     {
         return [
             'email' => 'required|email',
-            'verification_code' => 'required|min:4'
+            'verification_code' => 'required|digits_between:4,4'
         ];
     }
 

@@ -14,34 +14,35 @@ class UserController extends Controller
     public function allUser()
     {
         try{
-            $user1 = User::all();
+            $user = User::all();
 
             return response()->json([
                 "success" => true,
                 "status" => 200,
                 "message" => "User fetched successfully",
-                "data" => $user1
+                "data" => $user
             ],200);
         }
         catch(Exception $exception)
         {
             return response()->json([
                 "success" => false,
-                "status" => 500,
-                "message" => $exception
-            ], 500);
+                "status"  => 500,
+                "message" => $exception,
+                "track"   => $exception->getMessage()
+            ],500);
         }
     }
 
-    //An API for User Registration
+/* API For User Registration */
     public function storeData(userSignUp $req)
     {
         try
         {
-            $user2 = User::create([
-                'name' => $req->name,
-                'email' => $req->email,
-                'password' => $req->password,
+            $user = User::create([
+                'name'=> $req->name,
+                'email'=> $req->email,
+                'password'=> $req->password,
                 'verification_code' => $req->verification_code,
                 'verification_expiry' => $req->verification_expiry,
                 'status' => $req->status,
@@ -52,7 +53,7 @@ class UserController extends Controller
                 "success" => true,
                 "status" => 200,
                 "message" => 'User Registered Successfully',
-                "data" => $user2
+                "data" => $user
             ], 200);
         }
 
@@ -60,8 +61,9 @@ class UserController extends Controller
         {
             return response()->json([
                 "success" => false,
-                "status" => 500,
-                "message" => $exception
+                "status"  => 500,
+                "message" => $exception,
+                "track"   => $exception->getMessage()
             ], 500);
         }
 

@@ -27,46 +27,45 @@ class AuthController extends Controller
     public function register(userSignUp $request)
     {
         date_default_timezone_set("Asia/Karachi");
-        DB::beginTransaction();
         try
         {
+        DB::beginTransaction();
         $input = $request->all();
-        $mytime = Carbon::now()->addDays(7)->format('Y-m-d H:i:s');
+        $mytime = Carbon::now()->format('Y-m-d H:i:s');
         $email = $input['email'];
         $digits = 4;
         $verificationCode = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
         $verificationExp = $mytime;
 
         $user = User::create([
-            'name'                => $request->name,
-            'email'               => $request->email,
-            'password'            => \Hash::make($request->password),
-            'status'              => Constants::USER_STATUS_UNVERIFIED,
-            'verification_code'   => $verificationCode,
-            'verification_expiry' => $verificationExp,
+                    'name'                =>    $request->name,
+                    'email'               =>    $request->email,
+                    'password'            =>    \Hash::make($request->password),
+                    'status'              =>    Constants::USER_STATUS_UNVERIFIED,
+                    'verification_code'   =>    $verificationCode,
+                    'verification_expiry' =>    $verificationExp,
         ]);
-/**
- * User Created Successfully | E-Mail Verification CODE being Sent
- */
+
         DB::commit();
         $sendmail = Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email) {
-            $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
+        $message->to($email)->subject('Account Verification Code - User Registration')->from(env('MAIL_FROM'));
         });
-        return response()->json([
-            'success'   =>  true,
-            'status'    =>  200,
-            'message'   =>  'User created Successfully',
-            'data'      =>  $user
-        ], 200);
-        }
 
+        return response()->json([
+                    'success'   =>  true,
+                    'status'    =>  200,
+                    'message'   =>  'User created Successfully',
+                    'data'      =>  $user
+            ], 200);
+        }
         catch(Exception $exception)
         {
             DB::rollback();
             return response()->json([
-                'success' => false,
-                'status'  => 500,
-                'message' => 'Internal Server Error'
+                    'success' => false,
+                    'status'  => 500,
+                    'message' => 'Internal Server Error',
+                    'track'=> $exception->getMessage()
             ], 500);
         }
     }
@@ -86,9 +85,9 @@ class AuthController extends Controller
                     'message' => 'Try Again Email Address/Password is Incorrect'
                 ], 400);
             }
-            $user       = Auth::user();
-            $userId     = $user->id;
-            $userStatus = $user->status;
+                     $user       = Auth::user();
+                     $userId     = $user->id;
+                     $userStatus = $user->status;
 /**
  * Restricting Users via User Status from Constant File (config/Constant.php)
  */
@@ -110,26 +109,29 @@ class AuthController extends Controller
 /**
  * Creating Token for Oauth_access_token ON LOGIN
 */
-            $accessTokenModel = new AccessToken();
-            $destroyToken = $accessTokenModel->sessionDestroyed($userId);
-            $token = $user->createToken('postscrud')->accessToken;
+                    $accessTokenModel = new AccessToken();
+                    $destroyToken = $accessTokenModel->sessionDestroyed($userId);
+                    $token = $user->createToken('postscrud')->accessToken;
 /**
  * User LOGIN Success Response
  */
+            $login_time = Carbon::now()->format('Y-m-d H:i:s');
+
+
             $success = array(
-                'user_id'  => $userId,
-                'username' => $user->name,
-                'email'  => $user->email,
-                'status' =>  $userStatus,
-                'token'  => "Bearer ".$token
+                    'user_id'  => $userId,
+                    'username' => $user->name,
+                    'email'    => $user->email,
+                    'status'   =>  $userStatus,
+                    'token'    => "Bearer ".$token
             );
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'status' => 200,
-                'message' => 'logged in successfull',
-                'data' => $success
+                    'success' => true,
+                    'status' => 200,
+                    'message' => 'logged in successfull',
+                    'data' => $success
             ], 200);
         }
 
@@ -137,9 +139,10 @@ class AuthController extends Controller
         {
             DB::rollback();
             return response()->json([
-                'success' => false,
-                'status' => 500,
-                'message' => 'Sign in Failed'
+                    'success'     => false,
+                    'status'      => 500,
+                    'message'     => 'Sign in Failed',
+                    'track_error' => $exception->getMessage()
             ], 500);
         }
     }
@@ -152,18 +155,19 @@ class AuthController extends Controller
             $users = User::all();
 
             return response()->json([
-                "success" => true,
-                "status" => 200,
-                "message" => "Users fetched successfully",
-                "data" => $users
+                    "success" => true,
+                    "status" => 200,
+                    "message" => "Users fetched successfully",
+                    "data" => $users
             ], 200);
 
         }
         catch (Exception $exception) {
             return response()->json([
-                "success" => false,
-                "status" => 500,
-                "message" => $exception
+                    "success" => false,
+                    "status"  => 500,
+                    "message" => $exception,
+                    "track"   => $exception->getMessage()
             ], 500);
         }
     }
@@ -185,9 +189,9 @@ class AuthController extends Controller
             //If User is not found
             if (!$user) {
                 return response()->json([
-                    'success' => false,
-                    'status' => 400,
-                    'message' => 'Please enter a valid Email Address'
+                    "success" => false,
+                    "status" => 400,
+                    "message" => 'Please enter a valid Email Address'
                 ], 400);
             }
 
@@ -202,36 +206,36 @@ class AuthController extends Controller
             $data = $user->updateUser($user_id, $resetPwData);
             if (!$data) {
                 return response()->json([
-                    'success' => false,
-                    'status' => 400,
-                    'message' => 'Error generating verification code'
+                    "success" => false,
+                    "status" => 400,
+                    "message" => 'Error generating verification code'
                 ], 400);
             }
 /**
  * Mailing | Generating Verification Code via E-mail
  **/
-        Mail::raw("Your user Registration Code is: $verificationCode", function ($message) use ($email){
+        Mail::raw("Your User Request Reset Code is: $verificationCode", function ($message) use ($email){
         $message->to($email)->subject('Account Verification Code - Password reset ')->from(env('MAIL_FROM'));
         });
 
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'status' => 200,
-                'message' => 'Verification Code Generated Successfully',
-                'data' => $data
-            ], 200);
+                    "success" => true,
+                    "status" => 200,
+                    "message" => 'Verification Code Generated Successfully',
+                    "data" => $data
+                ], 200);
         }
-
         catch (Exception $exception)
         {
             DB::rollback();
             return response()->json([
-                'success' => false,
-                'status' => 500,
-                'message' => 'Verification Code Fail to generate.'
-            ], 500);
+                    "success" => false,
+                    "status"  => 500,
+                    "message" => 'Verification Code Fail to generate.',
+                    "track"   => $exception->getMessage()
+                ], 500);
         }
     }
 /**
@@ -282,21 +286,22 @@ class AuthController extends Controller
             DB::commit();
 
             return response()->json([
-                "success" => true,
-                "status" => 200,
-                "message" => "User Status has been changed Successfully.",
-                "data" => $user
+                    "success" => true,
+                    "status" => 200,
+                    "message" => "User Status has been changed Successfully.",
+                    "data" => $user
             ], 200);
             }
 
         }
-        catch (Exception $e)
+        catch (Exception $exception)
         {
             DB::rollback();
             return response()->json([
-                "success" => false,
-                "status" => 500,
-                "message" => "Internal Server Error"
+                    "success" => false,
+                    "status"  => 500,
+                    "message" => "Internal Server Error",
+                    "track"   => $exception->getMessage()
             ], 500);
         }
     }
@@ -312,7 +317,7 @@ class AuthController extends Controller
             {
                 return response()->json([
                     "success" => false,
-                    "status" => 404,
+                    "status"  => 404,
                     "message" => "User not found"
                 ], 404);
             }
@@ -321,27 +326,27 @@ class AuthController extends Controller
             {
                 return response()->json([
                     "success" => false,
-                    "status" => 404,
+                    "status"  => 404,
                     "message" => "User id cannot be null"
                 ], 404);
             }
             else
             {
             return response()->json([
-                "success" => true,
-                "status" => 200,
-                "message" => "User has been deleted Successfully"
-            ], 200);
+                    "success" => true,
+                    "status"  => 200,
+                    "message" => "User has been deleted Successfully"
+                ], 200);
             }
         }
         catch(Exception $exception)
         {
             return response()->json([
-                "success" => false,
-                "status" => 500,
-                // "message" => "Internal Server Error"
-                'message' => $exception
-            ], 500);
+                    "success" => false,
+                    "status"  => 500,
+                    "message" => $exception,
+                    "track"   => $exception->getMessage()
+                ], 500);
         }
     }
 }

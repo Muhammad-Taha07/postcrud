@@ -32,8 +32,7 @@ class userSignUp extends FormRequest
         return [
             'name' => 'required|max:50',
             'email' => 'required|max:50|email|unique:users',
-            'password'  => 'required|min:6|regex:/^(?!.* )(?=.*[a-z])(?=.*[A-Z]).*$/',
-            'current_time' => 'required|date_format:Y-m-d H:i:s'
+            'password'  => 'required|min:6|regex:/^(?!.* )(?=.*[a-z])(?=.*[A-Z]).*$/'
         ];
     }
 

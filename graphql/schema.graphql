@@ -1,0 +1,72 @@
+    # Schema defined
+    scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+    type Query
+    {
+        users: [User!]! @all
+        user(id: ID @eq): User @find
+        user_paginate(id: ID @eq): User@paginate
+        # user(id: ID @eq): User @find
+        # user(id: ID @eq) [User]! @find
+        # User@find this will generate the error for returning multiple values
+
+        posts: [Post!]! @all
+        post(id: ID @eq): Post@find
+        post_paginate(id: ID @eq): Post@paginate
+    }
+    enum varstatus
+    {
+        CREATED @enum(value: "created")
+        STARTED @enum(value: "started")
+        INPROGRESS @enum(value: "in-progress")
+        COMPLETED @enum(value: "completed")
+    }
+
+    type Mutation
+    {
+        # CRUD Operation on User Model | LightHouse Mutation
+        createUser(id: ID, name: String!, email: String!, password: String!, status: Int) :User! @create
+        updateUser(id: ID!, name: String, email: String, password: String, status: Int) :User! @update
+        deleteUser(id: ID!) :User! @delete
+        upsertUser(id: ID, name: String!, email: String!, password: String, status: Int):User! @upsert
+
+        # CRUD Operation on Post Model | LightHouse Mutation
+        createPost(title: String!, description: String!, user_id: Int, status: Int!) :Post! @create
+        updatePost(id: ID!, title: String!, description: String!, user_id: Int, status: Int!) :Post! @update
+        deletePost(id: ID!) :Post! @delete
+        upsertPost(id: ID, title: String!, description: String!, user_id: Int, status: Int!) :Post! @upsert
+    }
+
+    # Targeted Fields/Records in Data-Base
+
+    type User
+    {
+        id: ID
+        name: String!
+        email: String!
+        password: String!
+        status: Int!
+        verification_code: Int
+        verification_expiry: String
+        postings: [Post] @hasMany
+        created_at: DateTime
+    }
+#
+    type Post
+    {
+        id: ID
+        user_id: Int
+        title: String!
+        description: String!
+        status: Int
+        author: User! @belongsTo
+        created_at: DateTime
+    }
+
+# GraphQL in Light-house does support multiple mutations in a single Query.
+# to perform mutaitons/query simultaneously Both Query type should be well written
+# in a single mutation brackets.
+#
+# HIGHLIGHTED STUFFS:
+# Everything while Inserting/Updating should be well defined in Scalar schema of GraphQL.
+# A type Script should be defined well as well in order to perform Query mutation in GraphQL PlayGround.

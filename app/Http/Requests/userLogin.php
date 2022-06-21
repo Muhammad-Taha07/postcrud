@@ -29,8 +29,8 @@ class userLogin extends FormRequest
     {
         return [
             'email'         => 'required|max:50|email',
-            'password'      => 'required|min:6',
-            'current_time'  =>  'required|date_format:Y-m-d H:i:s'
+            'password'      => 'required|min:6'
+            // 'current_time'  =>  'required|date_format:Y-m-d H:i:s'
         ];
     }
 

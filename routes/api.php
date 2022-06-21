@@ -15,16 +15,12 @@ use App\Http\Controllers\PostController;
 |
 */
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-//On-Boarding(Sign Up, Login, Change Password, Forget Password) API's
+/* On-Boarding(Sign Up, Login, Change Password, Forget Password) API's */
 
 Route::prefix('users')->group(function () {
-
     Route::get('/viewusers', [AuthController::class, 'allUser']);
     Route::post('/register', [AuthController::class,'register']);
-    Route::post('/login',[AuthController::class,'login']);
+    Route::post('/login', [AuthController::class,'login']);
     Route::post('/send-code',[AuthController::class,'RequestResetPass']);
     Route::post('/user-verification',[AuthController::class,'userAccountVerification']);
     Route::delete('/user-delete/{id}', [AuthController::class,'deleteUser']);
@@ -40,8 +36,8 @@ Route::middleware('auth:api')->prefix('posts')->group(function()
 
     Route::get('user-not-loggedin', function(){
         return response()->json([
-            "success" => false,
-            "status" => 401,
-            "message" => "You are not logged in"
+          "success" => false,
+          "status" => 401,
+          "message" => "You are not logged in"
         ], 401);
     })->name("user-not-loggedin");

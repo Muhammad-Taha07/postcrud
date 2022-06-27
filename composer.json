@@ -17,7 +17,8 @@
         "laravel/tinker": "^2.5",
         "mll-lab/laravel-graphql-playground": "^2.6",
         "nuwave/lighthouse": "^5.52",
-        "swiftmailer/swiftmailer": "^6.3"
+        "swiftmailer/swiftmailer": "^6.3",
+        "intervention/image": "dev-master"
     },
     "require-dev": {
         "facade/ignition": "^2.0",

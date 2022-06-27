@@ -20,7 +20,6 @@
         COMPLETED @enum(value: "completed")
     }
 
-
     type Mutation
     {
         # CRUD Operation on User Model | LightHouse Mutation

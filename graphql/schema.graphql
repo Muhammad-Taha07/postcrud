@@ -5,15 +5,13 @@
     {
         users: [User!]! @all
         user(id: ID @eq): User @find
-        user_paginate(id: ID @eq): User@paginate
-        # user(id: ID @eq): User @find
-        # user(id: ID @eq) [User]! @find
-        # User@find this will generate the error for returning multiple values
+        user_paginate(id: ID @eq): User @paginate
 
         posts: [Post!]! @all
         post(id: ID @eq): Post@find
-        post_paginate(id: ID @eq): Post@paginate
+        post_paginate(id: ID @eq): Post @paginate
     }
+
     enum varstatus
     {
         CREATED @enum(value: "created")
@@ -22,14 +20,14 @@
         COMPLETED @enum(value: "completed")
     }
 
+
     type Mutation
     {
         # CRUD Operation on User Model | LightHouse Mutation
-        createUser(id: ID, name: String!, email: String!, password: String!, status: Int) :User! @create
+        createUser(id: ID, name: String!, email: String!, password: String!, status: Int, verification_code: Int) :User! @create
         updateUser(id: ID!, name: String, email: String, password: String, status: Int) :User! @update
         deleteUser(id: ID!) :User! @delete
         upsertUser(id: ID, name: String!, email: String!, password: String, status: Int):User! @upsert
-
         # CRUD Operation on Post Model | LightHouse Mutation
         createPost(title: String!, description: String!, user_id: Int, status: Int!) :Post! @create
         updatePost(id: ID!, title: String!, description: String!, user_id: Int, status: Int!) :Post! @update

@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>postcrud</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;600&display=swap" rel="stylesheet">
@@ -47,6 +47,9 @@
             .title {
                 font-size: 84px;
             }
+            .titlea {
+                font-size: 44px;
+            }
 
             .links > a {
                 color: #636b6f;
@@ -59,7 +62,7 @@
             }
 
             .m-b-md {
-                margin-bottom: 30px;
+                margin-bottom: 0.05%;
             }
         </style>
     </head>
@@ -81,7 +84,10 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                    postcrud
+                </div>
+                <div class="titlea m-b-md">
+                    API-based App
                 </div>
 
                 <div class="links">

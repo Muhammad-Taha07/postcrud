@@ -22,8 +22,6 @@ class Post extends Model
        // Posts_Media Creating post details
        public function postsMedia()
        {
-
         return $this->hasMany(Post_Media::class, 'post_id');
-
        }
 }

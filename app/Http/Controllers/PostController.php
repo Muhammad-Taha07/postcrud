@@ -11,6 +11,7 @@ use App\AccessToken;
 use Illuminate\Support\Facades\Auth;
 use App\Post;
 use App\User;
+use App\Post_Media;
 
 class PostController extends Controller
 {
@@ -36,6 +37,7 @@ class PostController extends Controller
             ], 500);
         }
     }
+
     public function createPost(Request $req)
     {
         $user = Auth::user();
@@ -46,6 +48,13 @@ class PostController extends Controller
                     'user_id' => $user->id,
                     'description' => $req->post_description,
                     'status' => Constants::POST_TYPE_ACTIVE,
+        ]);
+
+        $post_media = Post_Media::create([
+                    'post_id' => $posts->id,
+                    'media_url' => $req->media_url,
+                    'media_thumb_url' => $req->media_thumb_url,
+                    'status' => Constants::POST_MEDIA_TYPE_ACTIVE,
         ]);
 
         return response()->json([
@@ -59,11 +68,36 @@ class PostController extends Controller
     {
         return response()->json([
                     "success" => false,
-                    "status" => 400,
+                    "status"  => 400,
                     "message" => "Post Creation fail",
             ], 400);
     }
     }
+
+    public function uploadFile(Request $req, Post_Media $post_media)
+    {
+        try
+        {
+        $uploadedImage = $req->file('file')->store('apiDocs');
+        return response()->json([
+                    "success" => true,
+                    "status"  => 200,
+                    "message" => "Image Uploaded Successfully",
+                    "data"    => $uploadedImage
+        ], 200);
+        }
+
+        catch(Exception $exception)
+        {
+            return response()->json([
+                    "success" => false,
+                    "status"  => 500,
+                    "message" => "Image Uploading Failed",
+                    "track"   => $exception->getMessage()
+            ], 500);
+        }
+    }
+
     public function RealtionshipFetch()
     {
         try
@@ -87,6 +121,7 @@ class PostController extends Controller
             ], 404);
         }
     }
+
     public function useJoins()
     {
         try
@@ -96,9 +131,9 @@ class PostController extends Controller
         $records    =   $userModel->getUserPosts($user);
         return response()->json([
                     "success" => true,
-                    "status" => 200,
+                    "status"  => 200,
                     "message" => "Success",
-                    "data" => $records
+                    "data"    => $records
             ], 200);
         }
         catch(Exception $e)
@@ -109,6 +144,36 @@ class PostController extends Controller
                     "message" => "Joins Failed"
             ], 400);
         }
+    }
+
+    public function storeImage(Request $request, Post_Media $media)
+    {
+        try
+        {
+        // $media_thumb_url = $request->input('media_thumb_url');
+        $media_url = $request->file('file')->getClientOriginalName();
+        $request->file('file')->store('apiDocs');
+        $media->media_url = $media_url;
+        $media->save();
+
+            return response()->json([
+                    "success" => true,
+                    "status"  => 200,
+                    "message" => "File uploaded Successully",
+                    "data"    => $media
+            ], 200);
+        }
+
+        catch(Exception $exception)
+        {
+            return response()->json([
+                    "success" => false,
+                    "status"  => 400,
+                    "message" => "Upload Failed",
+                    "track"   => getMessage()
+            ], 400);
+        }
+
     }
 
 

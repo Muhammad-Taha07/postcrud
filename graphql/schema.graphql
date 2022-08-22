@@ -5,7 +5,7 @@
     {
         users: [User!]! @all
         user(id: ID @eq): User @find
-        user_paginate(id: ID @eq): User @paginate
+        user_info(id: ID @eq): User @paginate
 
         posts: [Post!]! @all
         post(id: ID @eq): Post@find
@@ -20,13 +20,28 @@
         COMPLETED @enum(value: "completed")
     }
 
+    input CreateUserInput
+    {
+        name: String
+        email: String
+        password: String
+        status: Int!
+    }
+
+    type Subscription
+    {
+        userCreated : User
+    }
+
     type Mutation
     {
         # CRUD Operation on User Model | LightHouse Mutation
         createUser(id: ID, name: String!, email: String!, password: String!, status: Int, verification_code: Int) :User! @create
+        createUser(input: CreateUserInput)
         updateUser(id: ID!, name: String, email: String, password: String, status: Int) :User! @update
         deleteUser(id: ID!) :User! @delete
         upsertUser(id: ID, name: String!, email: String!, password: String, status: Int):User! @upsert
+
         # CRUD Operation on Post Model | LightHouse Mutation
         createPost(title: String!, description: String!, user_id: Int, status: Int!) :Post! @create
         updatePost(id: ID!, title: String!, description: String!, user_id: Int, status: Int!) :Post! @update
@@ -34,8 +49,7 @@
         upsertPost(id: ID, title: String!, description: String!, user_id: Int, status: Int!) :Post! @upsert
     }
 
-    # Targeted Fields/Records in Data-Base
-
+        # Targeted Fields/Records in Data-Base
     type User
     {
         id: ID
@@ -48,7 +62,7 @@
         postings: [Post] @hasMany
         created_at: DateTime
     }
-#
+
     type Post
     {
         id: ID

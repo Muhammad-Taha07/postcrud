@@ -17,10 +17,7 @@ final class UserCreated extends GraphQLSubscription
      */
     public function authorize(Subscriber $subscriber, Request $request): bool
     {
-        //
-        // $user = $subscriber->context->user;
-        // $author = User::find($subscriber->args['author']);
-        // return $user->can('viewUser', $author);
+        return true;
     }
 
     /**
@@ -32,8 +29,6 @@ final class UserCreated extends GraphQLSubscription
      */
     public function filter(Subscriber $subscriber, $root): bool
     {
-        // TODO implement filter
-        // $user = $subscriber->context->user;
-        // return $root->updated_by !== $user->id;
+        return true;
     }
 }

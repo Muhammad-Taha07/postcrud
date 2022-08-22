@@ -112,7 +112,7 @@ class AuthController extends Controller
                     $accessTokenModel = new AccessToken();
                     $destroyToken = $accessTokenModel->sessionDestroyed($userId);
                     $token = $user->createToken('postscrud')->accessToken;
-/**
+/** 
  * User LOGIN Success Response
  */
             $login_time = Carbon::now()->format('Y-m-d H:i:s');
@@ -277,7 +277,6 @@ class AuthController extends Controller
                     "message" => "Verification Code has expired | Request a new One"
                 ], 400);
             }
-
             else
             {
             $user->status = Constants::USER_STATUS_ACTIVE;

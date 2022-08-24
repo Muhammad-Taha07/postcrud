@@ -194,6 +194,7 @@ class AuthController extends Controller
             $resetPwData['verification_code'] = $verificationCode;
             $resetPwData['verifciation_expiry'] = $verificationExp;
             // $resetPwData['updated_at'] = $currentTime;
+            $var = "changes made";
 
             $data = $user->updateUser($user_id, $resetPwData);
 
